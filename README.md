@@ -6,12 +6,15 @@ Allows to increase volume pass 100%
 
 
 
-Dependency:
+### Dependency:
+
 
 * bash 
 * gdbus
 * pulseaudio
 * pulseaudio-utils
+
+To install the dependencies on Debian use: 
 
 
 ```
@@ -21,10 +24,10 @@ sudo apt-get install bash libglib2.0-bin pulseaudio pulseaudio-utils
 
 ### Install
 
-	Bind keyboard event to following scripts:
+Bind keyboard event to following scripts:
 
-		Audio lower volume	-> volume-control.sh dec
+	Audio lower volume	-> volume-control.sh dec
 
-		Audio raise volume	-> volume-control.sh inc
-		
-		Audio mute			-> volume-control.sh mute
+	Audio raise volume	-> volume-control.sh inc
+
+	Audio mute		-> volume-control.sh mute
