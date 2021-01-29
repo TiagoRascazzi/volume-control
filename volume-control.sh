@@ -4,18 +4,32 @@ VOLUME_INC=5
 
 
 #set volume
+VOLUME="$(pacmd list-sinks|grep -A 15 '* index'| awk '/volume: front/{ print $5 }' | sed 's/.$//' )";
 ISMUTE="$(pacmd list-sinks|grep -A 15 '* index' |  awk '/muted:/{ print $2}')";
 
 if [ "$1" = "inc" ]; then
-   pactl set-sink-volume @DEFAULT_SINK@ +$VOLUME_INC%
+
+	NEW_VOLUME=$(($VOLUME+$VOLUME_INC))
+    if [ $VOLUME -lt 100 ] && [ $NEW_VOLUME -gt 100 ]; then
+        NEW_VOLUME=100
+    fi 
+    pactl set-sink-volume @DEFAULT_SINK@ $NEW_VOLUME%
+    
 elif [ "$1" = "dec" ]; then
-   pactl set-sink-volume @DEFAULT_SINK@ -$VOLUME_INC%
+
+	NEW_VOLUME=$(($VOLUME-$VOLUME_INC))
+    if [ $VOLUME -gt 100 ] && [ $NEW_VOLUME -lt 100 ]; then
+        NEW_VOLUME=100
+    fi
+    pactl set-sink-volume @DEFAULT_SINK@ $NEW_VOLUME%
 fi
 
+
+
 if [ "$ISMUTE" = "yes" ]; then
-	pactl set-sink-mute @DEFAULT_SINK@ 0;
+    pactl set-sink-mute @DEFAULT_SINK@ 0;
 elif [ "$1" = "mute" ]; then
-		pactl set-sink-mute @DEFAULT_SINK@ 1;
+    pactl set-sink-mute @DEFAULT_SINK@ 1;
 fi
 
 
@@ -45,11 +59,11 @@ MESSAGE="$REPLACE_ID<span color='$COLOR' font='18px'>Volume: $VOLUME%</span>"
 
 #get replace id from tmp file if exist
 if [ -f "$TMP_FILE" ]; then
-	REPLACE_ID="$(cat $TMP_FILE)"
+    REPLACE_ID="$(cat $TMP_FILE)"
 fi
 
 if [ -z "$REPLACE_ID" ]; then
-	REPLACE_ID=0
+    REPLACE_ID=0
 fi
 
 
