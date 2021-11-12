@@ -1,3 +1,4 @@
+#!/bin/sh
 
 TMP_FILE=/tmp/volume-control
 VOLUME_INC=5
