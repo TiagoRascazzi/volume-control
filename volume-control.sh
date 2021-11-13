@@ -1,8 +1,12 @@
 #!/bin/sh
 
-TMP_FILE=/tmp/volume-control
-VOLUME_INC=5
+mpv ~/script/volume-control/Blop-Mark_DiAngelo-79054334.mp3 >/dev/null &
 
+
+TMP_FILE=/tmp/volume-control
+TMP_FILE_DATE=/tmp/volume-control-date
+VOLUME_INC=5
+DELAY=1000
 
 #set volume
 VOLUME="$(pacmd list-sinks|grep -A 15 '* index'| awk '/volume: front/{ print $5 }' | sed 's/.$//' )";
@@ -26,56 +30,48 @@ elif [ "$1" = "dec" ]; then
 fi
 
 
-
 if [ "$ISMUTE" = "yes" ]; then
     pactl set-sink-mute @DEFAULT_SINK@ 0;
 elif [ "$1" = "mute" ]; then
     pactl set-sink-mute @DEFAULT_SINK@ 1;
 fi
 
-
-
 #set notify message and icon
 VOLUME="$(pacmd list-sinks|grep -A 15 '* index'| awk '/volume: front/{ print $5 }' | sed 's/.$//' )";
 ISMUTE="$(pacmd list-sinks|grep -A 15 '* index' |  awk '/muted:/{ print $2}')";
 
-
 if [ "$VOLUME" -le 0 ] || [ "$ISMUTE" = "yes" ]; then
     ICON=audio-volume-muted
-    COLOR=#6B6B6B
 elif [ "$VOLUME" -le 20 ]; then
     ICON=audio-volume-low
-    COLOR=#FFFFFF
 elif [ "$VOLUME" -le 80 ]; then
     ICON=audio-volume-medium
-    COLOR=#FFFFFF
-else 
+elif [ "$VOLUME" -le 100 ];  then
     ICON=audio-volume-high
-    COLOR=#FFFFFF
+else 
+    ICON=audio-ready
 fi
 
-MESSAGE="$REPLACE_ID<span color='$COLOR' font='18px'>Volume: $VOLUME%</span>"
+MESSAGE="Volume: $VOLUME%"
 
 
+#get replace id from tmp file if existi
+PREV_DATE=$(cat $TMP_FILE_DATE)
+CURR_DATE=$(date +%s%3N)
+END_DATE=$(($PREV_DATE+$DELAY))
 
-#get replace id from tmp file if exist
-if [ -f "$TMP_FILE" ]; then
-    REPLACE_ID="$(cat $TMP_FILE)"
+OLD_ID=$(cat $TMP_FILE)
+
+if [ -f "$TMP_FILE" ] && [ ! -z $OLD_ID ] && [ $CURR_DATE -lt $END_DATE ]; then
+    ID=$(desktop-notify "$MESSAGE" --icon $ICON --timeout $DELAY --id $OLD_ID)
+    if [ -z $ID ]; then
+        echo ERRRORROROROR
+	ID=$OLD_ID
+    fi
+else
+    ID=$(desktop-notify "$MESSAGE" --icon $ICON --timeout $DELAY)
 fi
 
-if [ -z "$REPLACE_ID" ]; then
-    REPLACE_ID=0
-fi
-
-
-#create / replace notify 
-ID=$(gdbus call --session \
-             --dest org.freedesktop.Notifications \
-             --object-path /org/freedesktop/Notifications \
-             --method org.freedesktop.Notifications.Notify \
-             "volume-control" "$REPLACE_ID" \
-             "$ICON" " " "$MESSAGE" \
-             [] {} 5000)
-
-#save id to file
+#save id and date to file
+echo $CURR_DATE > "${TMP_FILE_DATE}"
 echo "$ID" | sed 's/(uint32 \([0-9]\+\),)/\1/' > "$TMP_FILE"

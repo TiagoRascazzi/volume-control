@@ -13,6 +13,9 @@ Allows to increase volume pass 100%
 * gdbus
 * pulseaudio
 * pulseaudio-utils
+* python
+* desktop-notify
+
 
 To install the dependencies on Debian use: 
 
